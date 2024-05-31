@@ -171,7 +171,7 @@ public open class LineCartesianLayer(
     }
 
     /** Draws the line background. */
-    public fun drawBackgroundLine(
+    public open fun drawBackgroundLine(
       context: DrawContext,
       bounds: RectF,
       zeroLineYFraction: Float,
