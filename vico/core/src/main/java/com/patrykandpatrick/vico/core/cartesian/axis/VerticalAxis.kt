@@ -276,9 +276,11 @@ public open class VerticalAxis<Position : AxisPosition.Vertical>(override val po
               .orZero
           val labelSpace =
             when (horizontalLabelPosition) {
-              Outside ->
-                getMaxLabelWidth(height).ceil.also { extraStore[maxLabelWidthKey] = it } +
-                  tickLength
+              Outside -> {
+                val maxLabelWidth = getMaxLabelWidth(height).ceil
+                extraStore[maxLabelWidthKey] = maxLabelWidth
+                maxLabelWidth + tickLength
+              }
               Inside -> 0f
             }
           (labelSpace + titleComponentWidth + axisThickness).coerceIn(
