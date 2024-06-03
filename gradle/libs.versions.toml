@@ -8,6 +8,7 @@ appcompat = "1.7.0"
 composeBom = "2024.05.00"
 composeNavigation = "2.7.7"
 coroutines = "1.8.1"
+desugar_jdk_libs = "2.0.4"
 dokka = "1.9.20"
 jUnit = "4.13.2"
 jUnitExt = "1.1.5"
@@ -35,6 +36,7 @@ composeUI = { group = "androidx.compose.ui", name = "ui" }
 composeUITooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 composeViewBinding = { group = "androidx.compose.ui", name = "ui-viewbinding" }
 coroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "coroutines" }
+desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version.ref = "desugar_jdk_libs" }
 jUnit = { module = "junit:junit", version.ref = "jUnit" }
 jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "jupiter" }
 jupiterParams = { module = "org.junit.jupiter:junit-jupiter-params", version.ref = "jupiter" }

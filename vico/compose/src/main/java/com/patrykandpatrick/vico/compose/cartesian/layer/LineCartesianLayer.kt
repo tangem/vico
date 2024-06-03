@@ -144,7 +144,7 @@ public fun rememberLineSpec(
     )
   }
 
-private fun DynamicShader.getDefaultBackgroundShader(): DynamicShader? =
+internal fun DynamicShader.getDefaultBackgroundShader(): DynamicShader? =
   when (this) {
     is ColorShader ->
       TopBottomShader(
@@ -203,7 +203,7 @@ private fun DynamicShader.getDefaultBackgroundShader(): DynamicShader? =
     else -> null
   }
 
-private val StrokeCap.paintCap: Paint.Cap
+internal val StrokeCap.paintCap: Paint.Cap
   get() =
     when (this) {
       StrokeCap.Butt -> Paint.Cap.BUTT

@@ -86,7 +86,7 @@ public abstract class BaseAxis<Position : AxisPosition> : Axis<Position> {
     restrictedBounds.setAll(bounds.filterNotNull())
   }
 
-  protected fun isNotInRestrictedBounds(
+  protected open fun isNotInRestrictedBounds(
     left: Float,
     top: Float,
     right: Float,

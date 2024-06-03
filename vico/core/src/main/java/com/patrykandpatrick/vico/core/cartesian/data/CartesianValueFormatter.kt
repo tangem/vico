@@ -33,6 +33,12 @@ public fun interface CartesianValueFormatter {
     verticalAxisPosition: AxisPosition.Vertical?,
   ): CharSequence
 
+//  public fun format(
+//    value: Number,
+//    chartValues: ChartValues,
+//    verticalAxisPosition: AxisPosition.Vertical?,
+//  ): CharSequence = format(value.toFloat(), chartValues, verticalAxisPosition)
+
   /** Houses [CartesianValueFormatter] factory functions. */
   public companion object {
     private class Decimal(private val decimalFormat: DecimalFormat) : CartesianValueFormatter {

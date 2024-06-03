@@ -14,31 +14,8 @@
  * limitations under the License.
  */
 
-pluginManagement.repositories {
-  google()
-  gradlePluginPortal()
-  mavenCentral()
+package com.tangem.vico.demo
+
+enum class ChartScreen(val id : Int, val screenName: String) {
+  MarketDetails(0, "Market Details Chart")
 }
-
-@Suppress("UnstableApiUsage")
-dependencyResolutionManagement {
-  repositoriesMode = RepositoriesMode.FAIL_ON_PROJECT_REPOS
-  repositories {
-    google()
-    mavenCentral()
-    mavenLocal()
-  }
-}
-
-rootProject.name = "Vico"
-
-include(
-  "tangem-demo",
-  "sample",
-  "vico",
-  "vico:compose",
-  "vico:compose-m2",
-  "vico:compose-m3",
-  "vico:core",
-  "vico:views",
-)
