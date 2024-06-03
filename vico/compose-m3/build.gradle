@@ -45,28 +45,6 @@ android {
     }
 }
 
-afterEvaluate {
-
-    publishing {
-
-        publications {
-
-            VicoComposeM3(MavenPublication) {
-
-                groupId = library.groupId
-                artifactId = getArtifactId(project)
-                version = project.version
-                from components.release
-
-                customizePom(pom)
-                setUpRepositories(repositories)
-            }
-        }
-    }
-
-    setUpSigning(signing, publishing.publications.VicoComposeM3)
-}
-
 dependencies {
 
     api project(":vico:compose")

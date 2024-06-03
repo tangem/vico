@@ -34,28 +34,6 @@ android {
     }
 }
 
-afterEvaluate {
-
-    publishing {
-
-        publications {
-
-            VicoView(MavenPublication) {
-
-                groupId = library.groupId
-                artifactId = getArtifactId(project)
-                version = project.version
-                from components.release
-
-                customizePom(pom)
-                setUpRepositories(repositories)
-            }
-        }
-    }
-
-    setUpSigning(signing, publishing.publications.VicoView)
-}
-
 dependencies {
 
     api project(":vico:core")

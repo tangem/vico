@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+apply plugin: 'maven-publish'
 
 android {
 
@@ -48,18 +49,35 @@ android {
 
 ext {
     getNamespace = this.&getNamespace
-    getArtifactId = this.&getArtifactId
-    customizePom = this.&customizePom
-    setUpRepositories = this.&setUpRepositories
-    setUpSigning = this.&setUpSigning
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            maven(MavenPublication) {
+                groupId = library.publishGroupId
+                artifactId = project.name
+                version = library.publishVersion
+                from components.release
+
+                customizePom(pom)
+            }
+        }
+        repositories {
+            maven {
+                name = "GitHubPackages"
+                url = uri("https://maven.pkg.github.com/tangem/vico")
+                credentials {
+                    username = "$githubUser"
+                    password = "$githubPass"
+                }
+            }
+        }
+    }
 }
 
 String getNamespace(Project project) {
     return "${library.groupId}.${project.name.replace("-", ".")}"
-}
-
-String getArtifactId(Project project) {
-    return project.name
 }
 
 void customizePom(MavenPom pom) {
@@ -75,29 +93,4 @@ void customizePom(MavenPom pom) {
             url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
         }
     }
-
-    pom.scm {
-        connection = "scm:git:git://github.com/tangem/vico.git"
-        developerConnection = "scm:git:ssh://github.com/tangem/vico.git"
-        url = "https://github.com/patrykandpatrick/vico"
-    }
-}
-
-boolean isReleaseVersion() {
-    return !project.version.endsWith("SNAPSHOT")
-}
-
-void setUpRepositories(RepositoryHandler handler) {
-    handler.maven {
-        name = "GitHubPackages"
-        url = uri("https://maven.pkg.github.com/tangem/vico")
-        credentials {
-            username = "$githubUser"
-            password = "$githubPass"
-        }
-    }
-}
-
-void setUpSigning(SigningExtension signing, MavenPublication publication) {
-
 }

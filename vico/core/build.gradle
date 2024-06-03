@@ -36,28 +36,6 @@ android {
     }
 }
 
-afterEvaluate {
-
-    publishing {
-
-        publications {
-
-            VicoCore(MavenPublication) {
-
-                groupId = library.groupId
-                artifactId = getArtifactId(project)
-                version = project.version
-                from components.release
-
-                customizePom(pom)
-                setUpRepositories(repositories)
-            }
-        }
-    }
-
-    setUpSigning(signing, publishing.publications.VicoCore)
-}
-
 dependencies {
     implementation libs.androidXAnnotation
     implementation libs.coroutinesCore

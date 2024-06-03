@@ -18,7 +18,9 @@ ext {
 
     library = [
             groupId        : "com.patrykandpatrick.vico",
-            version_name   : "2.0.0-alpha.21-tangem1",
+            publishGroupId : "com.tangem.vico",
+            version_name   : "2.0.0-alpha.21",
+            publishVersion : project.hasProperty('publishVersion') ? project.getProperty('publishVersion') : '0.0.1',
             version_code   : 1,
             target_sdk     : 34,
             min_sdk        : 19,
