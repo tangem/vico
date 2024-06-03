@@ -1,6 +1,5 @@
 name: Build debug APK
 on:
-  push:
   pull_request:
 jobs:
   build-debug-apk:
@@ -17,3 +16,7 @@ jobs:
         with:
           name: Debug APK
           path: sample/build/outputs/apk/debug/**.apk
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Debug Tangem Demo APK
+          path: tangem-demo/build/outputs/apk/debug/**.apk

@@ -64,9 +64,9 @@ String getArtifactId(Project project) {
 
 void customizePom(MavenPom pom) {
 
-    pom.name = "Vico"
+    pom.name = "Tangem Vico"
     pom.description = "A light and extensible chart library for Android."
-    pom.url = "https://github.com/patrykandpatrick/vico"
+    pom.url = "https://github.com/tangem/vico"
 
     pom.licenses {
 
@@ -77,24 +77,9 @@ void customizePom(MavenPom pom) {
     }
 
     pom.scm {
-        connection = "scm:git:git://github.com/patrykandpatrick/vico.git"
-        developerConnection = "scm:git:ssh://github.com/patrykandpatrick/vico.git"
+        connection = "scm:git:git://github.com/tangem/vico.git"
+        developerConnection = "scm:git:ssh://github.com/tangem/vico.git"
         url = "https://github.com/patrykandpatrick/vico"
-    }
-
-    pom.developers {
-
-        developer {
-            id = "patrykgoworowski"
-            name = "Patryk Goworowski"
-            email = "contact@patrykgoworowski.pl"
-        }
-
-        developer {
-            id = "patrickmichalik"
-            name = "Patrick Michalik"
-            email = "contact@patrickmichalik.com"
-        }
     }
 }
 
@@ -104,68 +89,15 @@ boolean isReleaseVersion() {
 
 void setUpRepositories(RepositoryHandler handler) {
     handler.maven {
-        def releaseUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
-        def snapshotUrl = "https://s01.oss.sonatype.org/content/repositories/snapshots/"
-        url = isReleaseVersion() ? releaseUrl : snapshotUrl
-
+        name = "GitHubPackages"
+        url = uri("https://maven.pkg.github.com/tangem/vico")
         credentials {
-            username = "patrykandpatrick"
-            password = findProperty("OSSRH_PASSWORD")
+            username = "$githubUser"
+            password = "$githubPass"
         }
     }
 }
 
 void setUpSigning(SigningExtension signing, MavenPublication publication) {
-    signing.setRequired {
-        isReleaseVersion() && gradle.taskGraph.allTasks.any { it.is(PublishToMavenRepository) }
-    }
 
-    def gpgKey = findProperty("GPG_KEY")
-    def gpgKeyPassword = findProperty("GPG_KEY_PASSWORD")
-
-    signing.useInMemoryPgpKeys(gpgKey, gpgKeyPassword)
-    signing.sign publication
 }
-
-//apply from: '../artifactConfig.gradle'
-//apply plugin: 'maven-publish'
-//
-//afterEvaluate {
-//    publishing {
-//        publications {
-//            maven(MavenPublication) {
-//                groupId = "$artifactConfig.group"
-//                artifactId = "$project.artifactId"
-//                version = "$artifactConfig.version"
-//
-//                if (artifactId == "android") {
-//                    from components.release
-//                    artifact(sourceJar)
-//
-//                    pom.withXml {
-//                        Node pomNode = asNode()
-//                        pomNode.dependencies.'*'.findAll() {
-//                            it.groupId.text() == artifactConfig.group
-//                        }.each() { it.parent().remove(it) }
-//
-//                        pomNode.dependencies.'*'.findAll() {
-//                            it.scope.text() == 'runtime'
-//                        }.each { it.scope*.value = 'compile' }
-//                    }
-//                } else if (artifactId == "core") {
-//                    from components.java
-//                }
-//            }
-//        }
-//        repositories {
-//            maven {
-//                name = "GitHubPackages"
-//                url = uri("https://maven.pkg.github.com/tangem/tangem-sdk-android")
-//                credentials {
-//                    username = "$githubUser"
-//                    password = "$githubPass"
-//                }
-//            }
-//        }
-//    }
-//}
