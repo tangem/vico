@@ -71,10 +71,6 @@ fun rememberTangemChartMarker(
         label = TextComponent.build { textSizeSp = 0f },
         indicator = indicator,
         indicatorSizeDp = 16f,
-//        setIndicatorColor = { bColor ->
-//          indicatorRearComponent.color = color.toArgb().copyColor(alpha = .24f)
-//          indicatorCenterComponent.color = color.toArgb()
-//        },
         guideline = guideline,
       ) {
       override fun getInsets(
