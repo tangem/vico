@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.core.cartesian.axis.AxisItemPlacer
 import com.patrykandpatrick.vico.core.cartesian.axis.AxisPosition
 import com.patrykandpatrick.vico.core.cartesian.axis.BaseAxis
-import com.patrykandpatrick.vico.core.cartesian.axis.UnrestrictedVerticalAxis
+import com.patrykandpatrick.vico.core.cartesian.axis.CustomVerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.common.Defaults
@@ -38,6 +38,7 @@ import com.patrykandpatrick.vico.core.common.component.TextComponent
  * @param tick the [LineComponent] to use for the ticks.
  * @param tickLength the length of the ticks.
  * @param guideline the [LineComponent] to use for the guidelines.
+ * @param labelGuideline the [LineComponent] to use for the guidelines which starts from label text.
  * @param valueFormatter formats the labels.
  * @param sizeConstraint defines how the [VerticalAxis] is to size itself.
  * @param horizontalLabelPosition the horizontal position of the labels.
@@ -49,12 +50,13 @@ import com.patrykandpatrick.vico.core.common.component.TextComponent
  * @param title the axis title.
  */
 @Composable
-public fun rememberUnrestrictedStartAxis(
+public fun rememberCustomStartAxis(
   label: TextComponent? = rememberAxisLabelComponent(),
   axis: LineComponent? = rememberAxisLineComponent(),
   tick: LineComponent? = rememberAxisTickComponent(),
   tickLength: Dp = Defaults.AXIS_TICK_LENGTH.dp,
   guideline: LineComponent? = rememberAxisGuidelineComponent(),
+  labelGuideline: LineComponent? = null,
   valueFormatter: CartesianValueFormatter = remember { CartesianValueFormatter.decimal() },
   sizeConstraint: BaseAxis.SizeConstraint = BaseAxis.SizeConstraint.Auto(),
   horizontalLabelPosition: VerticalAxis.HorizontalLabelPosition =
@@ -65,9 +67,10 @@ public fun rememberUnrestrictedStartAxis(
   labelRotationDegrees: Float = Defaults.AXIS_LABEL_ROTATION_DEGREES,
   titleComponent: TextComponent? = null,
   title: CharSequence? = null,
-): UnrestrictedVerticalAxis<AxisPosition.Vertical.Start> =
-  remember { UnrestrictedVerticalAxis.build<AxisPosition.Vertical.Start>() }
+): CustomVerticalAxis<AxisPosition.Vertical.Start> =
+  remember { CustomVerticalAxis.build<AxisPosition.Vertical.Start>() }
     .apply {
+      this.labelGuideline = labelGuideline
       this.label = label
       axisLine = axis
       this.tick = tick
@@ -91,6 +94,7 @@ public fun rememberUnrestrictedStartAxis(
  * @param tick the [LineComponent] to use for the ticks.
  * @param tickLength the length of the ticks.
  * @param guideline the [LineComponent] to use for the guidelines.
+ * @param labelGuideline the [LineComponent] to use for the guidelines which starts from label text.
  * @param valueFormatter formats the labels.
  * @param sizeConstraint defines how the [VerticalAxis] is to size itself.
  * @param horizontalLabelPosition the horizontal position of the labels.
@@ -102,12 +106,13 @@ public fun rememberUnrestrictedStartAxis(
  * @param title the axis title.
  */
 @Composable
-public fun rememberUnrestrictedEndAxis(
+public fun rememberCustomEndAxis(
   label: TextComponent? = rememberAxisLabelComponent(),
   axis: LineComponent? = rememberAxisLineComponent(),
   tick: LineComponent? = rememberAxisTickComponent(),
   tickLength: Dp = Defaults.AXIS_TICK_LENGTH.dp,
   guideline: LineComponent? = rememberAxisGuidelineComponent(),
+  labelGuideline: LineComponent? = null,
   valueFormatter: CartesianValueFormatter = remember { CartesianValueFormatter.decimal() },
   sizeConstraint: BaseAxis.SizeConstraint = BaseAxis.SizeConstraint.Auto(),
   horizontalLabelPosition: VerticalAxis.HorizontalLabelPosition =
@@ -118,9 +123,10 @@ public fun rememberUnrestrictedEndAxis(
   labelRotationDegrees: Float = Defaults.AXIS_LABEL_ROTATION_DEGREES,
   titleComponent: TextComponent? = null,
   title: CharSequence? = null,
-): UnrestrictedVerticalAxis<AxisPosition.Vertical.End> =
-  remember { UnrestrictedVerticalAxis.build<AxisPosition.Vertical.End>() }
+): CustomVerticalAxis<AxisPosition.Vertical.End> =
+  remember { CustomVerticalAxis.build<AxisPosition.Vertical.End>() }
     .apply {
+      this.labelGuideline = labelGuideline
       this.label = label
       axisLine = axis
       this.tick = tick

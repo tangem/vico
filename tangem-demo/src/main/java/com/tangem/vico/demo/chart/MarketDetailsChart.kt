@@ -16,8 +16,7 @@
 
 package com.tangem.vico.demo.chart
 
-import android.os.Build
-import android.util.Log
+import android.text.Layout
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
@@ -51,7 +50,7 @@ import com.patrykandpatrick.vico.compose.cartesian.CartesianChartHost
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisGuidelineComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberAxisLabelComponent
 import com.patrykandpatrick.vico.compose.cartesian.axis.rememberBottomAxis
-import com.patrykandpatrick.vico.compose.cartesian.axis.rememberUnrestrictedStartAxis
+import com.patrykandpatrick.vico.compose.cartesian.axis.rememberCustomStartAxis
 import com.patrykandpatrick.vico.compose.cartesian.fullWidth
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineCartesianLayer
 import com.patrykandpatrick.vico.compose.cartesian.layer.rememberLineSpec
@@ -77,7 +76,6 @@ import com.patrykandpatrick.vico.core.common.component.LineComponent
 import com.patrykandpatrick.vico.core.common.shader.ColorShader
 import com.patrykandpatrick.vico.core.common.shader.LinearGradientShader
 import com.patrykandpatrick.vico.core.common.shape.Shape
-import com.tangem.vico.demo.utils.MyVerticalAxisItemPlacer
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 import java.time.ZoneOffset
@@ -398,7 +396,7 @@ fun MarketDetailsChart(modifier: Modifier = Modifier) {
 
 @Composable
 fun rememberMyStartAxis(modifier: Modifier = Modifier): VerticalAxis<AxisPosition.Vertical.Start> {
-  return rememberUnrestrictedStartAxis(
+  return rememberCustomStartAxis(
     axis = null,
     tick = null,
     guideline = rememberMyAxisGuidelineComponent(),
@@ -408,7 +406,7 @@ fun rememberMyStartAxis(modifier: Modifier = Modifier): VerticalAxis<AxisPositio
         start = 4.dp,
       ),
       textSize = 14.sp,
-      textAlignment = android.text.Layout.Alignment.ALIGN_CENTER,
+      textAlignment = Layout.Alignment.ALIGN_CENTER,
     ),
     horizontalLabelPosition = VerticalAxis.HorizontalLabelPosition.Inside,
     verticalLabelPosition = VerticalAxis.VerticalLabelPosition.Center,
