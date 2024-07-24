@@ -27,29 +27,14 @@ import com.patrykandpatrick.vico.core.common.shape.Shape
  * This class represents an unbounded line component. It extends the LineComponent class and
  * provides additional functionality for drawing vertical and horizontal lines with additional
  * drawing space.
- *
- * @property color the background color.
- * @property thicknessDp the thickness of the line.
- * @property shape the [Shape] to use for the line.
- * @property dynamicShader an optional [DynamicShader] to apply to the line.
- * @property margins the margins of the line.
- * @property strokeWidthDp the stroke width.
- * @property strokeColor the stroke color.
- * @param verticalAddDrawSpaceDp Additional vertical drawing space for the line component in density-independent pixels (dp).
- * @param horizontalAddDrawSpaceDp Additional horizontal drawing space for the line component in density-independent pixels (dp).
- *
- * @see LineComponent
- * @see Shape
- * @see DynamicShader
- * @see Dimensions
  */
 public class UnboundedLineComponent(
   color: Int,
   thicknessDp: Float = Defaults.LINE_COMPONENT_THICKNESS_DP,
   shape: Shape = Shape.Rectangle,
-  dynamicShader: DynamicShader? = null,
+  shader: DynamicShader? = null,
   margins: Dimensions = Dimensions.Empty,
-  strokeWidthDp: Float = 0f,
+  strokeThicknessDp: Float = 0f,
   strokeColor: Int = Color.TRANSPARENT,
   protected val verticalAddDrawSpaceDp: Float = 0f,
   protected val horizontalAddDrawSpaceDp: Float = 0f,
@@ -57,9 +42,9 @@ public class UnboundedLineComponent(
   color = color,
   thicknessDp = thicknessDp,
   shape = shape,
-  dynamicShader = dynamicShader,
+  shader = shader,
   margins = margins,
-  strokeWidthDp = strokeWidthDp,
+  strokeThicknessDp = strokeThicknessDp,
   strokeColor = strokeColor,
 ) {
 

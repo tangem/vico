@@ -26,9 +26,6 @@ import com.patrykandpatrick.vico.compose.common.component.rememberShapeComponent
 import com.patrykandpatrick.vico.compose.common.component.rememberUnboundedLineComponent
 import com.patrykandpatrick.vico.compose.common.of
 import com.patrykandpatrick.vico.compose.common.shape.dashed
-import com.patrykandpatrick.vico.core.cartesian.CartesianMeasureContext
-import com.patrykandpatrick.vico.core.cartesian.HorizontalDimensions
-import com.patrykandpatrick.vico.core.cartesian.Insets
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
 import com.patrykandpatrick.vico.core.cartesian.marker.DefaultCartesianMarker
 import com.patrykandpatrick.vico.core.common.Defaults
@@ -41,14 +38,14 @@ fun rememberTangemChartMarker(
   color: Color,
 ): CartesianMarker {
   val indicatorFrontComponent =
-    rememberShapeComponent(Shape.Pill, MaterialTheme.colorScheme.surface)
+    rememberShapeComponent(shape = Shape.Pill, color = MaterialTheme.colorScheme.surface)
   val indicatorCenterComponent = rememberShapeComponent(
-      shape = Shape.Pill,
-      color = color,
+    shape = Shape.Pill,
+    color = color,
   )
   val indicatorRearComponent = rememberShapeComponent(
-    Shape.Pill,
-    color = color.copy(alpha = .24f)
+    shape = Shape.Pill,
+    color = color.copy(alpha = .24f),
   )
   val indicator =
     rememberLayeredComponent(
@@ -61,35 +58,16 @@ fun rememberTangemChartMarker(
       padding = Dimensions.of(3.dp),
     )
   val guideline = rememberUnboundedLineComponent(
-      color = color,
-      verticalAddDrawSpace = 24.dp,
-      shape = Shape.dashed(Shape.Rectangle, Defaults.DASH_LENGTH.dp, Defaults.DASH_GAP.dp),
+    color = color,
+    verticalAddDrawSpace = 24.dp,
+    shape = Shape.dashed(Shape.Rectangle, Defaults.DASH_LENGTH.dp, Defaults.DASH_GAP.dp),
   )
   return remember(indicator, guideline) {
-    object :
-      DefaultCartesianMarker(
-        label = TextComponent.build { textSizeSp = 0f },
-        indicator = indicator,
-        indicatorSizeDp = 16f,
-        guideline = guideline,
-      ) {
-      override fun getInsets(
-        context: CartesianMeasureContext,
-        outInsets: Insets,
-        horizontalDimensions: HorizontalDimensions,
-      ) {
-        with(context) {
-          super.getInsets(context, outInsets, horizontalDimensions)
-          val baseShadowInsetDp =
-            CLIPPING_FREE_SHADOW_RADIUS_MULTIPLIER * LABEL_BACKGROUND_SHADOW_RADIUS_DP
-          outInsets.top += (baseShadowInsetDp - LABEL_BACKGROUND_SHADOW_DY_DP).pixels
-          outInsets.bottom += (baseShadowInsetDp + LABEL_BACKGROUND_SHADOW_DY_DP).pixels
-        }
-      }
-    }
+    DefaultCartesianMarker(
+      label = TextComponent(textSizeSp = 0f),
+      indicator = { indicator },
+      indicatorSizeDp = 16f,
+      guideline = guideline,
+    )
   }
 }
-
-private const val LABEL_BACKGROUND_SHADOW_RADIUS_DP = 4f
-private const val LABEL_BACKGROUND_SHADOW_DY_DP = 2f
-private const val CLIPPING_FREE_SHADOW_RADIUS_MULTIPLIER = 1.4f

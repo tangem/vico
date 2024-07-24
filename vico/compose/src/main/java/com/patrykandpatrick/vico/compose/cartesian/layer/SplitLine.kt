@@ -24,43 +24,37 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.patrykandpatrick.vico.compose.common.shader.color
-import com.patrykandpatrick.vico.core.cartesian.DefaultPointConnector
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.cartesian.layer.LineCartesianLayer
-import com.patrykandpatrick.vico.core.cartesian.layer.spec.SplitLineSpec
+import com.patrykandpatrick.vico.core.cartesian.layer.spec.SplitLine
 import com.patrykandpatrick.vico.core.common.Defaults
 import com.patrykandpatrick.vico.core.common.VerticalPosition
-import com.patrykandpatrick.vico.core.common.component.Component
 import com.patrykandpatrick.vico.core.common.component.TextComponent
 import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 
-/**
- * TODO
- */
 @Composable
-public fun rememberSplitLineSpec(
+public fun rememberSplitLine(
   shader: DynamicShader = DynamicShader.color(Color.Black),
   thickness: Dp = Defaults.LINE_SPEC_THICKNESS_DP.dp,
   backgroundShaderFirst: DynamicShader? = shader.getDefaultBackgroundShader(),
   backgroundShaderSecond: DynamicShader? = shader.getDefaultBackgroundShader(),
   cap: StrokeCap = StrokeCap.Round,
-  point: Component? = null,
-  pointSize: Dp = Defaults.POINT_SIZE.dp,
+  pointProvider: LineCartesianLayer.PointProvider? = null,
+  pointConnector: LineCartesianLayer.PointConnector = remember {
+    LineCartesianLayer.PointConnector.cubic()
+  },
   dataLabel: TextComponent? = null,
   dataLabelVerticalPosition: VerticalPosition = VerticalPosition.Top,
   dataLabelValueFormatter: CartesianValueFormatter = remember { CartesianValueFormatter.decimal() },
   dataLabelRotationDegrees: Float = 0f,
-  pointConnector: LineCartesianLayer.LineSpec.PointConnector = DefaultPointConnector(),
   @FloatRange(from = 0.0, to = 1.0) xSplitFraction: Float = 0f,
-): LineCartesianLayer.LineSpec =
+): LineCartesianLayer.Line =
   remember(
     shader,
     thickness,
     backgroundShaderFirst,
     backgroundShaderSecond,
     cap,
-    point,
-    pointSize,
     dataLabel,
     dataLabelVerticalPosition,
     dataLabelRotationDegrees,
@@ -68,14 +62,13 @@ public fun rememberSplitLineSpec(
     pointConnector,
     xSplitFraction
   ) {
-    SplitLineSpec(
+    SplitLine(
       shader = shader,
       thicknessDp = thickness.value,
       backgroundShaderFirst = backgroundShaderFirst,
       backgroundShaderSecond = backgroundShaderSecond,
       cap = cap.paintCap,
-      point = point,
-      pointSizeDp = pointSize.value,
+      pointProvider = pointProvider,
       dataLabel = dataLabel,
       dataLabelVerticalPosition = dataLabelVerticalPosition,
       dataLabelValueFormatter = dataLabelValueFormatter,
