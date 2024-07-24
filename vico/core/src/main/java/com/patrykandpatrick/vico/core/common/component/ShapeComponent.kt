@@ -19,54 +19,55 @@ package com.patrykandpatrick.vico.core.common.component
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Path
-import android.graphics.Shader
 import com.patrykandpatrick.vico.core.common.Dimensions
 import com.patrykandpatrick.vico.core.common.DrawContext
 import com.patrykandpatrick.vico.core.common.alpha
 import com.patrykandpatrick.vico.core.common.half
-import com.patrykandpatrick.vico.core.common.round
 import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import com.patrykandpatrick.vico.core.common.shape.Shape
 import com.patrykandpatrick.vico.core.common.withOpacity
-import kotlin.properties.Delegates
 
 /**
- * [ShapeComponent] is a [Component] that draws a shape.
+ * Draws [Shape]s.
  *
- * @param shape the [Shape] that will be drawn.
- * @param color the color of the shape.
- * @param dynamicShader an optional [Shader] provider used as the shape’s background.
- * @param margins the [Component]’s margins.
- * @param strokeWidthDp the width of the shape’s stroke (in dp).
- * @param strokeColor the color of the stroke.
+ * @property color the fill color.
+ * @property shape the [Shape].
+ * @property margins the margins.
+ * @property strokeColor the stroke color.
+ * @property strokeThicknessDp the stroke thickness (in dp).
+ * @property shader applied to the fill.
+ * @property shadow stores the shadow properties.
  */
 public open class ShapeComponent(
+  public val color: Int = Color.BLACK,
   public val shape: Shape = Shape.Rectangle,
-  color: Int = Color.BLACK,
-  public val dynamicShader: DynamicShader? = null,
-  override val margins: Dimensions = Dimensions.Empty,
-  public val strokeWidthDp: Float = 0f,
-  strokeColor: Int = Color.TRANSPARENT,
-) : PaintComponent<ShapeComponent>(), Component {
-  private val paint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
-  private val strokePaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-  protected val path: Path = Path()
-
-  /** The color of the shape. */
-  public var color: Int by Delegates.observable(color) { _, _, value -> paint.color = value }
-
-  /** The color of the stroke. */
-  public var strokeColor: Int by
-    Delegates.observable(strokeColor) { _, _, value -> strokePaint.color = value }
-
-  init {
-    paint.color = color
-
-    with(strokePaint) {
+  protected val margins: Dimensions = Dimensions.Empty,
+  public val strokeColor: Int = Color.TRANSPARENT,
+  protected val strokeThicknessDp: Float = 0f,
+  protected val shader: DynamicShader? = null,
+  protected val shadow: Shadow? = null,
+) : Component {
+  private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = this@ShapeComponent.color }
+  private val strokePaint =
+    Paint(Paint.ANTI_ALIAS_FLAG).apply {
       this.color = strokeColor
       style = Paint.Style.STROKE
     }
+
+  protected val path: Path = Path()
+
+  init {
+    require(strokeThicknessDp >= 0) { "`strokeThicknessDp` must be nonnegative." }
+  }
+
+  protected fun applyShader(
+    context: DrawContext,
+    left: Float,
+    top: Float,
+    right: Float,
+    bottom: Float,
+  ) {
+    shader?.provideShader(context, left, top, right, bottom)?.let(paint::setShader)
   }
 
   override fun draw(
@@ -76,58 +77,42 @@ public open class ShapeComponent(
     right: Float,
     bottom: Float,
     opacity: Float,
-  ): Unit =
-    with(context) {
-      if (left == right || top == bottom) return // Skip drawing shape that will be invisible.
-      path.rewind()
-      applyShader(context, left, top, right, bottom)
-      val centerX = (left + right).half
-      val centerY = (top + bottom).half
-      componentShadow.maybeUpdateShadowLayer(
-        context = this,
-        paint = paint,
-        backgroundColor = color,
-        opacity = opacity,
-      )
-
-      val strokeWidth = strokeWidthDp.pixels
-      strokePaint.strokeWidth = strokeWidth
-
-      fun drawShape(paint: Paint, isStroke: Boolean) {
-        val strokeCompensation = if (isStroke) strokeWidth.half else 0f
-
-        shape.drawShape(
-          context = context,
-          paint = paint,
-          path = path,
-          left =
-            minOf(left + margins.startDp.pixels + strokeWidth.half, centerX - strokeCompensation)
-              .round,
-          top =
-            minOf(top + margins.topDp.pixels + strokeWidth.half, centerY - strokeCompensation)
-              .round,
-          right =
-            maxOf(right - margins.endDp.pixels - strokeWidth.half, centerX + strokeCompensation)
-              .round,
-          bottom =
-            maxOf(bottom - margins.bottomDp.pixels - strokeWidth.half, centerY + strokeCompensation)
-              .round,
-        )
-      }
-
-      paint.withOpacity(opacity) { paint -> drawShape(paint = paint, isStroke = false) }
-      if (strokeWidth > 0f && strokeColor.alpha > 0) drawShape(paint = strokePaint, isStroke = true)
-    }
-
-  protected fun applyShader(
-    context: DrawContext,
-    left: Float,
-    top: Float,
-    right: Float,
-    bottom: Float,
   ) {
-    dynamicShader?.provideShader(context, left, top, right, bottom)?.let { shader ->
-      paint.shader = shader
+    with(context) {
+      var adjustedLeft = left + margins.getLeftDp(isLtr).pixels
+      var adjustedTop = top + margins.topDp.pixels
+      var adjustedRight = right - margins.getRightDp(isLtr).pixels
+      var adjustedBottom = bottom - margins.bottomDp.pixels
+      if (adjustedLeft >= adjustedRight || adjustedTop >= adjustedBottom) return
+      val strokeThickness = strokeThicknessDp.pixels
+      if (strokeThickness != 0f) {
+        adjustedLeft += strokeThickness.half
+        adjustedTop += strokeThickness.half
+        adjustedRight -= strokeThickness.half
+        adjustedBottom -= strokeThickness.half
+        if (adjustedLeft > adjustedRight || adjustedTop > adjustedBottom) return
+      }
+      path.rewind()
+      applyShader(this, left, top, right, bottom)
+      shadow?.updateShadowLayer(this, paint, opacity)
+      paint.withOpacity(opacity) { paint ->
+        shape.draw(this, paint, path, adjustedLeft, adjustedTop, adjustedRight, adjustedBottom)
+      }
+      if (strokeThickness == 0f || strokeColor.alpha == 0) return
+      strokePaint.strokeWidth = strokeThickness
+      shape.draw(this, strokePaint, path, adjustedLeft, adjustedTop, adjustedRight, adjustedBottom)
     }
   }
+
+  /** Creates a new [ShapeComponent] based on this one. */
+  public open fun copy(
+    color: Int = this.color,
+    shape: Shape = this.shape,
+    margins: Dimensions = this.margins,
+    strokeColor: Int = this.strokeColor,
+    strokeThicknessDp: Float = this.strokeThicknessDp,
+    shader: DynamicShader? = this.shader,
+    shadow: Shadow? = this.shadow,
+  ): ShapeComponent =
+    ShapeComponent(color, shape, margins, strokeColor, strokeThicknessDp, shader, shadow)
 }

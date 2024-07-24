@@ -16,7 +16,6 @@
 
 package com.patrykandpatrick.vico.core.cartesian.layer
 
-import android.graphics.Color
 import androidx.annotation.RestrictTo
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawContext
 import com.patrykandpatrick.vico.core.cartesian.CartesianMeasureContext
@@ -30,7 +29,6 @@ import com.patrykandpatrick.vico.core.cartesian.data.CandlestickCartesianLayerMo
 import com.patrykandpatrick.vico.core.cartesian.data.ChartValues
 import com.patrykandpatrick.vico.core.cartesian.data.MutableChartValues
 import com.patrykandpatrick.vico.core.cartesian.data.forEachIn
-import com.patrykandpatrick.vico.core.cartesian.data.getXSpacingMultiplier
 import com.patrykandpatrick.vico.core.cartesian.layer.CandlestickCartesianLayer.Candle
 import com.patrykandpatrick.vico.core.cartesian.marker.CandlestickCartesianLayerMarkerTarget
 import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
@@ -43,6 +41,7 @@ import com.patrykandpatrick.vico.core.common.data.MutableExtraStore
 import com.patrykandpatrick.vico.core.common.getStart
 import com.patrykandpatrick.vico.core.common.half
 import com.patrykandpatrick.vico.core.common.shape.Shape
+import kotlin.math.max
 
 /**
  * Draws the content of candlestick charts.
@@ -85,10 +84,11 @@ public open class CandlestickCartesianLayer(
       get() = maxOf(body.thicknessDp, topWick.thicknessDp, bottomWick.thicknessDp)
 
     // Empty companion object is needed for extension functions.
-    public companion object
+    /** @suppress */
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP) public companion object
   }
 
-  private val _markerTargets = mutableMapOf<Float, List<CandlestickCartesianLayerMarkerTarget>>()
+  private val _markerTargets = mutableMapOf<Double, List<CandlestickCartesianLayerMarkerTarget>>()
 
   /** Holds information on the [CandlestickCartesianLayer]’s horizontal dimensions. */
   protected val horizontalDimensions: MutableHorizontalDimensions = MutableHorizontalDimensions()
@@ -96,7 +96,7 @@ public open class CandlestickCartesianLayer(
   protected val drawingModelKey: ExtraStore.Key<CandlestickCartesianLayerDrawingModel> =
     ExtraStore.Key()
 
-  override val markerTargets: Map<Float, List<CartesianMarker.Target>> = _markerTargets
+  override val markerTargets: Map<Double, List<CartesianMarker.Target>> = _markerTargets
 
   override fun drawInternal(
     context: CartesianDrawContext,
@@ -120,9 +120,9 @@ public open class CandlestickCartesianLayer(
     val halfMaxCandleWidth = candles.getWidestCandle(model.extraStore).widthDp.half.pixels
 
     val drawingStart =
-      bounds.getStart(isLtr) +
+      layerBounds.getStart(isLtr) +
         (horizontalDimensions.startPadding - halfMaxCandleWidth * zoom) *
-          layoutDirectionMultiplier - horizontalScroll
+          layoutDirectionMultiplier - scroll
 
     var bodyCenterX: Float
     var candle: Candle
@@ -131,16 +131,16 @@ public open class CandlestickCartesianLayer(
     model.series.forEachIn(chartValues.minX..chartValues.maxX) { entry, _ ->
       candle = candles.getCandle(entry, model.extraStore)
       val candleInfo = drawingModel?.entries?.get(entry.x) ?: entry.toCandleInfo(yRange)
-      val xSpacingMultiplier = chartValues.getXSpacingMultiplier(entry.x)
+      val xSpacingMultiplier = ((entry.x - chartValues.minX) / chartValues.xStep).toFloat()
       bodyCenterX =
         drawingStart +
           layoutDirectionMultiplier * horizontalDimensions.xSpacing * xSpacingMultiplier +
           halfMaxCandleWidth * zoom
 
-      var bodyBottomY = bounds.bottom - candleInfo.bodyBottomY * bounds.height()
-      var bodyTopY = bounds.bottom - candleInfo.bodyTopY * bounds.height()
-      val bottomWickY = bounds.bottom - candleInfo.bottomWickY * bounds.height()
-      val topWickY = bounds.bottom - candleInfo.topWickY * bounds.height()
+      var bodyBottomY = layerBounds.bottom - candleInfo.bodyBottomY * layerBounds.height()
+      var bodyTopY = layerBounds.bottom - candleInfo.bodyTopY * layerBounds.height()
+      val bottomWickY = layerBounds.bottom - candleInfo.bottomWickY * layerBounds.height()
+      val topWickY = layerBounds.bottom - candleInfo.topWickY * layerBounds.height()
 
       if (bodyBottomY - bodyTopY < minBodyHeight) {
         bodyBottomY = (bodyBottomY + bodyTopY).half + minBodyHeight.half
@@ -153,7 +153,7 @@ public open class CandlestickCartesianLayer(
           top = bodyTopY,
           bottom = bodyBottomY,
           centerX = bodyCenterX,
-          boundingBox = bounds,
+          boundingBox = layerBounds,
           thicknessScale = zoom,
         )
       ) {
@@ -188,7 +188,7 @@ public open class CandlestickCartesianLayer(
     }
   }
 
-  protected open fun updateMarkerTargets(
+  protected open fun CartesianDrawContext.updateMarkerTargets(
     entry: CandlestickCartesianLayerModel.Entry,
     canvasX: Float,
     bodyBottomCanvasY: Float,
@@ -197,9 +197,9 @@ public open class CandlestickCartesianLayer(
     highCanvasY: Float,
     candle: Candle,
   ) {
-    if (canvasX <= bounds.left - 1 || canvasX >= bounds.right + 1) return
-    val limitedBodyBottomCanvasY = bodyBottomCanvasY.coerceIn(bounds.top, bounds.bottom)
-    val limitedBodyTopCanvasY = bodyTopCanvasY.coerceIn(bounds.top, bounds.bottom)
+    if (canvasX <= layerBounds.left - 1 || canvasX >= layerBounds.right + 1) return
+    val limitedBodyBottomCanvasY = bodyBottomCanvasY.coerceIn(layerBounds.top, layerBounds.bottom)
+    val limitedBodyTopCanvasY = bodyTopCanvasY.coerceIn(layerBounds.top, layerBounds.bottom)
     _markerTargets[entry.x] =
       listOf(
         CandlestickCartesianLayerMarkerTarget(
@@ -212,8 +212,8 @@ public open class CandlestickCartesianLayer(
           closingCanvasY =
             if (entry.absoluteChange == Change.Bullish) limitedBodyTopCanvasY
             else limitedBodyBottomCanvasY,
-          lowCanvasY = lowCanvasY.coerceIn(bounds.top, bounds.bottom),
-          highCanvasY = highCanvasY.coerceIn(bounds.top, bounds.bottom),
+          lowCanvasY = lowCanvasY.coerceIn(layerBounds.top, layerBounds.bottom),
+          highCanvasY = highCanvasY.coerceIn(layerBounds.top, layerBounds.bottom),
           openingColor = candle.body.solidOrStrokeColor,
           closingColor = candle.body.solidOrStrokeColor,
           lowColor = candle.bottomWick.solidOrStrokeColor,
@@ -278,10 +278,10 @@ public open class CandlestickCartesianLayer(
 
   private fun CandlestickCartesianLayerModel.Entry.toCandleInfo(yRange: ChartValues.YRange) =
     CandlestickCartesianLayerDrawingModel.CandleInfo(
-      bodyBottomY = (minOf(opening, closing) - yRange.minY) / yRange.length,
-      bodyTopY = (maxOf(opening, closing) - yRange.minY) / yRange.length,
-      bottomWickY = (low - yRange.minY) / yRange.length,
-      topWickY = (high - yRange.minY) / yRange.length,
+      bodyBottomY = ((minOf(opening, closing) - yRange.minY) / yRange.length).toFloat(),
+      bodyTopY = ((max(opening, closing) - yRange.minY) / yRange.length).toFloat(),
+      bottomWickY = ((low - yRange.minY) / yRange.length).toFloat(),
+      topWickY = ((high - yRange.minY) / yRange.length).toFloat(),
     )
 
   private fun CandlestickCartesianLayerModel.toDrawingModel(
@@ -382,10 +382,10 @@ public open class CandlestickCartesianLayer(
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public fun LineComponent.asWick(): LineComponent =
   copy(
-    color = if (color == Color.TRANSPARENT) strokeColor else color,
+    color = solidOrStrokeColor,
     thicknessDp = Defaults.WICK_DEFAULT_WIDTH_DP,
-    strokeWidthDp = 0f,
     shape = Shape.Rectangle,
+    strokeThicknessDp = 0f,
   )
 
 /**

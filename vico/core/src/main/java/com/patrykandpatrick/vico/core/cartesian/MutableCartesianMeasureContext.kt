@@ -17,19 +17,19 @@
 package com.patrykandpatrick.vico.core.cartesian
 
 import android.graphics.RectF
+import androidx.annotation.RestrictTo
 import com.patrykandpatrick.vico.core.cartesian.data.ChartValues
 import com.patrykandpatrick.vico.core.common.MutableMeasureContext
 
-/**
- * A [CartesianMeasureContext] implementation that facilitates the mutation of some of its
- * properties.
- */
+/** @suppress */
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class MutableCartesianMeasureContext(
   override val canvasBounds: RectF,
   override var density: Float,
   override var isLtr: Boolean,
-  override var scrollEnabled: Boolean = false,
-  override var horizontalLayout: HorizontalLayout = HorizontalLayout.Segmented,
+  override var scrollEnabled: Boolean,
+  override var zoomEnabled: Boolean,
+  override var horizontalLayout: HorizontalLayout,
   override var chartValues: ChartValues,
   spToPx: (Float) -> Float,
 ) :

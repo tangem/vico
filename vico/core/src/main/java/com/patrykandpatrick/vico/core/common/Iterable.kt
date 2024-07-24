@@ -16,29 +16,32 @@
 
 package com.patrykandpatrick.vico.core.common
 
+import kotlin.math.max
+import kotlin.math.min
+
 internal inline fun <T> Iterable<T>.rangeOf(
-  selector: (T) -> Float
-): ClosedFloatingPointRange<Float> {
+  selector: (T) -> Double
+): ClosedFloatingPointRange<Double> {
   val iterator = iterator()
   var minValue = selector(iterator.next())
   var maxValue = minValue
   while (iterator.hasNext()) {
     val v = selector(iterator.next())
-    minValue = minOf(minValue, v)
-    maxValue = maxOf(maxValue, v)
+    minValue = min(minValue, v)
+    maxValue = max(maxValue, v)
   }
   return minValue..maxValue
 }
 
 internal inline fun <T> Iterable<T>.rangeOfPair(
-  selector: (T) -> Pair<Float, Float>
-): ClosedFloatingPointRange<Float> {
+  selector: (T) -> Pair<Double, Double>
+): ClosedFloatingPointRange<Double> {
   val iterator = iterator()
   var (minValue, maxValue) = selector(iterator.next())
   while (iterator.hasNext()) {
     val (negValue, posValue) = selector(iterator.next())
-    minValue = minOf(minValue, negValue)
-    maxValue = maxOf(maxValue, posValue)
+    minValue = min(minValue, negValue)
+    maxValue = max(maxValue, posValue)
   }
   return minValue..maxValue
 }

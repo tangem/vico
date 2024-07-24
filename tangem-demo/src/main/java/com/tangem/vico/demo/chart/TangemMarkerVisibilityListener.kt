@@ -26,7 +26,7 @@ import com.patrykandpatrick.vico.core.cartesian.marker.LineCartesianLayerMarkerT
 
 @Composable
 fun rememberMarkerVisibilityListener(
-  yxFractionCallback : (y : Float?, x : Float?, xCanvas : Float?) -> Unit
+  yxFractionCallback : (y : Double?, x : Double?, xCanvas : Float?) -> Unit
 ): CartesianMarkerVisibilityListener {
   val hapticFeedback = LocalHapticFeedback.current
 

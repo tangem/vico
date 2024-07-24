@@ -16,7 +16,6 @@
 
 package com.patrykandpatrick.vico.sample.showcase.charts
 
-import android.graphics.Typeface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -59,11 +58,11 @@ import kotlinx.coroutines.withContext
 
 @Composable
 internal fun Chart6(uiFramework: UIFramework, modifier: Modifier) {
-  val modelProducer = remember { CartesianChartModelProducer.build() }
+  val modelProducer = remember { CartesianChartModelProducer() }
   LaunchedEffect(Unit) {
     withContext(Dispatchers.Default) {
       while (isActive) {
-        modelProducer.tryRunTransaction {
+        modelProducer.runTransaction {
           /* Learn more:
           https://patrykandpatrick.com/vico/wiki/cartesian-charts/layers/column-layer#data. */
           columnSeries {
@@ -90,7 +89,6 @@ internal fun Chart6(uiFramework: UIFramework, modifier: Modifier) {
 
 @Composable
 private fun ComposeChart6(modelProducer: CartesianChartModelProducer, modifier: Modifier) {
-  val horizontalBox = rememberComposeHorizontalBox()
   val shape = remember { Shape.cut(topLeftPercent = 50) }
   CartesianChartHost(
     chart =
@@ -102,12 +100,11 @@ private fun ComposeChart6(modelProducer: CartesianChartModelProducer, modifier: 
         ),
         startAxis = rememberStartAxis(),
         bottomAxis = rememberBottomAxis(valueFormatter = bottomAxisValueFormatter),
-        decorations = remember(horizontalBox) { listOf(horizontalBox) },
+        marker = rememberMarker(),
+        decorations = listOf(rememberComposeHorizontalBox()),
       ),
     modelProducer = modelProducer,
     modifier = modifier,
-    marker = rememberMarker(),
-    runInitialAnimation = false,
     zoomState = rememberVicoZoomState(zoomEnabled = false),
   )
 }
@@ -119,12 +116,11 @@ private fun ViewChart6(modelProducer: CartesianChartModelProducer, modifier: Mod
     { inflater, parent, attachToParent ->
       Chart6Binding.inflate(inflater, parent, attachToParent).apply {
         with(chartView) {
-          chart?.addDecoration(getViewHorizontalBox())
-          runInitialAnimation = false
+          chart?.decorations = listOf(getViewHorizontalBox())
           this.modelProducer = modelProducer
           (chart?.bottomAxis as HorizontalAxis<AxisPosition.Horizontal.Bottom>).valueFormatter =
             bottomAxisValueFormatter
-          this.marker = marker
+          chart?.marker = marker
         }
       }
     },
@@ -140,14 +136,13 @@ private fun rememberComposeHorizontalBox(): HorizontalBox {
     box = rememberShapeComponent(color = color.copy(HORIZONTAL_BOX_ALPHA)),
     labelComponent =
       rememberTextComponent(
-        background = rememberShapeComponent(Shape.Rectangle, color),
+        margins = Dimensions.of(HORIZONTAL_BOX_LABEL_MARGIN_DP.dp),
         padding =
           Dimensions.of(
             HORIZONTAL_BOX_LABEL_HORIZONTAL_PADDING_DP.dp,
             HORIZONTAL_BOX_LABEL_VERTICAL_PADDING_DP.dp,
           ),
-        margins = Dimensions.of(HORIZONTAL_BOX_LABEL_MARGIN_DP.dp),
-        typeface = Typeface.MONOSPACE,
+        background = rememberShapeComponent(color, Shape.Rectangle),
       ),
   )
 }
@@ -157,26 +152,25 @@ private fun getViewHorizontalBox() =
     y = { horizontalBoxY },
     box = ShapeComponent(color = HORIZONTAL_BOX_COLOR.copyColor(HORIZONTAL_BOX_ALPHA)),
     labelComponent =
-      TextComponent.build {
-        typeface = Typeface.MONOSPACE
-        background = ShapeComponent(Shape.Rectangle, HORIZONTAL_BOX_COLOR)
+      TextComponent(
+        margins = Dimensions(HORIZONTAL_BOX_LABEL_MARGIN_DP),
         padding =
           Dimensions(
             HORIZONTAL_BOX_LABEL_HORIZONTAL_PADDING_DP,
             HORIZONTAL_BOX_LABEL_VERTICAL_PADDING_DP,
-          )
-        margins = Dimensions(HORIZONTAL_BOX_LABEL_MARGIN_DP)
-      },
+          ),
+        background = ShapeComponent(HORIZONTAL_BOX_COLOR, Shape.Rectangle),
+      ),
   )
 
 private const val HORIZONTAL_BOX_COLOR = -1448529
-private const val HORIZONTAL_BOX_ALPHA = .36f
+private const val HORIZONTAL_BOX_ALPHA = 0.36f
 private const val HORIZONTAL_BOX_LABEL_HORIZONTAL_PADDING_DP = 8f
 private const val HORIZONTAL_BOX_LABEL_VERTICAL_PADDING_DP = 2f
 private const val HORIZONTAL_BOX_LABEL_MARGIN_DP = 4f
 
 private val columnColors = listOf(Color(0xff3e6558), Color(0xff5e836a), Color(0xffa5ba8e))
-private val horizontalBoxY = 7f..14f
+private val horizontalBoxY = 7.0..14.0
 private val daysOfWeek = listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
 private val bottomAxisValueFormatter = CartesianValueFormatter { x, _, _ ->
   daysOfWeek[x.toInt() % daysOfWeek.size]

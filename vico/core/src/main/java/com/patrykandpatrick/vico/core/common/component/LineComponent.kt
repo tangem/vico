@@ -24,28 +24,29 @@ import com.patrykandpatrick.vico.core.common.DrawContext
 import com.patrykandpatrick.vico.core.common.MeasureContext
 import com.patrykandpatrick.vico.core.common.shader.DynamicShader
 import com.patrykandpatrick.vico.core.common.shape.Shape
-import com.patrykandpatrick.vico.core.common.shape.Shape.Companion.Rectangle
 
 /**
- * Draws a line.
+ * Draws lines.
  *
- * @property color the background color.
- * @property thicknessDp the thickness of the line.
- * @property shape the [Shape] to use for the line.
- * @property dynamicShader an optional [DynamicShader] to apply to the line.
- * @property margins the margins of the line.
- * @property strokeWidthDp the stroke width.
- * @property strokeColor the stroke color.
+ * @param color the fill color.
+ * @param shape the [Shape].
+ * @param margins the margins.
+ * @param strokeColor the stroke color.
+ * @param strokeThicknessDp the stroke thickness (in dp).
+ * @param shader applied to the fill.
+ * @param shadow stores the shadow properties.
+ * @property thicknessDp the line thickness (in dp).
  */
 public open class LineComponent(
   color: Int,
-  public var thicknessDp: Float = Defaults.LINE_COMPONENT_THICKNESS_DP,
-  shape: Shape = Rectangle,
-  dynamicShader: DynamicShader? = null,
+  public val thicknessDp: Float = Defaults.LINE_COMPONENT_THICKNESS_DP,
+  shape: Shape = Shape.Rectangle,
   margins: Dimensions = Dimensions.Empty,
-  strokeWidthDp: Float = 0f,
   strokeColor: Int = Color.TRANSPARENT,
-) : ShapeComponent(shape, color, dynamicShader, margins, strokeWidthDp, strokeColor) {
+  strokeThicknessDp: Float = 0f,
+  shader: DynamicShader? = null,
+  shadow: Shadow? = null,
+) : ShapeComponent(color, shape, margins, strokeColor, strokeThicknessDp, shader, shadow) {
   private val MeasureContext.thickness: Float
     get() = thicknessDp.pixels
 
@@ -154,22 +155,45 @@ public open class LineComponent(
     }
 
   /** Creates a new [LineComponent] based on this one. */
+  override fun copy(
+    color: Int,
+    shape: Shape,
+    margins: Dimensions,
+    strokeColor: Int,
+    strokeThicknessDp: Float,
+    shader: DynamicShader?,
+    shadow: Shadow?,
+  ): LineComponent =
+    LineComponent(
+      color,
+      thicknessDp,
+      shape,
+      margins,
+      strokeColor,
+      strokeThicknessDp,
+      shader,
+      shadow,
+    )
+
+  /** Creates a new [LineComponent] based on this one. */
   public open fun copy(
     color: Int = this.color,
     thicknessDp: Float = this.thicknessDp,
     shape: Shape = this.shape,
-    dynamicShader: DynamicShader? = this.dynamicShader,
     margins: Dimensions = this.margins,
-    strokeWidthDp: Float = this.strokeWidthDp,
     strokeColor: Int = this.strokeColor,
+    strokeThicknessDp: Float = this.strokeThicknessDp,
+    shader: DynamicShader? = this.shader,
+    shadow: Shadow? = this.shadow,
   ): LineComponent =
     LineComponent(
-      color = color,
-      thicknessDp = thicknessDp,
-      shape = shape,
-      dynamicShader = dynamicShader,
-      margins = margins,
-      strokeWidthDp = strokeWidthDp,
-      strokeColor = strokeColor,
+      color,
+      thicknessDp,
+      shape,
+      margins,
+      strokeColor,
+      strokeThicknessDp,
+      shader,
+      shadow,
     )
 }

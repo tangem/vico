@@ -24,6 +24,7 @@ import android.graphics.PorterDuffXfermode
 import android.graphics.RectF
 import android.graphics.Shader
 import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.compose.runtime.Immutable
 import com.patrykandpatrick.vico.core.common.Defaults.FADING_EDGE_VISIBILITY_THRESHOLD_DP
 import com.patrykandpatrick.vico.core.common.Defaults.FADING_EDGE_WIDTH_DP
 import com.patrykandpatrick.vico.core.common.copyColor
@@ -44,11 +45,12 @@ private const val NO_FADE: Int = 0x00000000
  *   a mapping of the degree to which [visibilityThresholdDp] has been satisfied to the opacity of
  *   the fading edges.
  */
+@Immutable
 public open class FadingEdges(
-  public var startEdgeWidthDp: Float = FADING_EDGE_WIDTH_DP,
-  public var endEdgeWidthDp: Float = startEdgeWidthDp,
-  public var visibilityThresholdDp: Float = FADING_EDGE_VISIBILITY_THRESHOLD_DP,
-  public var visibilityInterpolator: TimeInterpolator = AccelerateDecelerateInterpolator(),
+  protected val startEdgeWidthDp: Float = FADING_EDGE_WIDTH_DP,
+  protected val endEdgeWidthDp: Float = FADING_EDGE_WIDTH_DP,
+  protected val visibilityThresholdDp: Float = FADING_EDGE_VISIBILITY_THRESHOLD_DP,
+  protected val visibilityInterpolator: TimeInterpolator = AccelerateDecelerateInterpolator(),
 ) {
   private val paint: Paint = Paint()
 
@@ -82,45 +84,39 @@ public open class FadingEdges(
     paint.xfermode = PorterDuffXfermode(PorterDuff.Mode.DST_OUT)
   }
 
-  /**
-   * Applies fading edges inside of the given [bounds] accordingly to the scroll state.
-   *
-   * @param context the drawing context that holds the information necessary to draw the fading
-   *   edges.
-   * @param bounds the bounds within which the fading edges will be drawn.
-   */
-  public fun applyFadingEdges(context: CartesianDrawContext, bounds: RectF): Unit =
+  /** Applies the fade. */
+  public fun draw(context: CartesianDrawContext) {
     with(context) {
       val maxScroll = getMaxScrollDistance()
       var fadeAlphaFraction: Float
 
-      if (scrollEnabled && startEdgeWidthDp > 0f && horizontalScroll > 0f) {
-        fadeAlphaFraction = (horizontalScroll / visibilityThresholdDp.pixels).coerceAtMost(1f)
+      if (scrollEnabled && startEdgeWidthDp > 0f && scroll > 0f) {
+        fadeAlphaFraction = (scroll / visibilityThresholdDp.pixels).coerceAtMost(1f)
 
         drawFadingEdge(
-          left = bounds.left,
-          top = bounds.top,
-          right = bounds.left + startEdgeWidthDp.pixels,
-          bottom = bounds.bottom,
+          left = layerBounds.left,
+          top = layerBounds.top,
+          right = layerBounds.left + startEdgeWidthDp.pixels,
+          bottom = layerBounds.bottom,
           direction = -1,
           alpha = (visibilityInterpolator.getInterpolation(fadeAlphaFraction) * FULL_ALPHA).toInt(),
         )
       }
 
-      if (scrollEnabled && endEdgeWidthDp > 0f && horizontalScroll < maxScroll) {
-        fadeAlphaFraction =
-          ((maxScroll - horizontalScroll) / visibilityThresholdDp.pixels).coerceAtMost(1f)
+      if (scrollEnabled && endEdgeWidthDp > 0f && scroll < maxScroll) {
+        fadeAlphaFraction = ((maxScroll - scroll) / visibilityThresholdDp.pixels).coerceAtMost(1f)
 
         drawFadingEdge(
-          left = bounds.right - endEdgeWidthDp.pixels,
-          top = bounds.top,
-          right = bounds.right,
-          bottom = bounds.bottom,
+          left = layerBounds.right - endEdgeWidthDp.pixels,
+          top = layerBounds.top,
+          right = layerBounds.right,
+          bottom = layerBounds.bottom,
           direction = 1,
           alpha = (visibilityInterpolator.getInterpolation(fadeAlphaFraction) * FULL_ALPHA).toInt(),
         )
       }
     }
+  }
 
   private fun CartesianDrawContext.drawFadingEdge(
     left: Float,

@@ -16,26 +16,56 @@
 
 package com.patrykandpatrick.vico.core.cartesian.axis
 
-import android.graphics.Color
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawContext
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis.HorizontalLabelPosition.Outside
+import com.patrykandpatrick.vico.core.cartesian.axis.VerticalAxis.VerticalLabelPosition.Center
+import com.patrykandpatrick.vico.core.cartesian.data.CartesianValueFormatter
 import com.patrykandpatrick.vico.core.common.component.LineComponent
 import com.patrykandpatrick.vico.core.common.component.TextComponent
+import com.patrykandpatrick.vico.core.common.translate
 
 
 /**
  * Custom implementation of vertical axis. It extends the VerticalAxis class and
  * provides additional functionality for handling vertical axis labels and guidelines.
  *
- * @param position The position of the axis
- *
  * @see VerticalAxis
  * @see AxisPosition.Vertical
  */
-public class CustomVerticalAxis<Position : AxisPosition.Vertical>(position: Position) :
-  VerticalAxis<Position>(position = position) {
-
+public class CustomVerticalAxis<Position : AxisPosition.Vertical>(
+  override val position: Position,
+  line: LineComponent?,
+  label: TextComponent?,
+  labelRotationDegrees: Float,
+  _horizontalLabelPosition: HorizontalLabelPosition = Outside,
+  _verticalLabelPosition: VerticalLabelPosition = Center,
+  valueFormatter: CartesianValueFormatter,
+  tick: LineComponent?,
+  tickLengthDp: Float,
+  guideline: LineComponent?,
+  _itemPlacer: ItemPlacer = ItemPlacer.step(),
+  sizeConstraint: SizeConstraint,
+  titleComponent: TextComponent?,
+  title: CharSequence?,
   /** The [LineComponent] to use for guidelines that aware of label width. */
-  public var labelGuideline: LineComponent? = null
+  public var labelGuideline: LineComponent? = null,
+) :
+  VerticalAxis<Position>(
+    position = position,
+    line = line,
+    label = label,
+    labelRotationDegrees = labelRotationDegrees,
+    horizontalLabelPosition = _horizontalLabelPosition,
+    verticalLabelPosition = _verticalLabelPosition,
+    valueFormatter = valueFormatter,
+    tick = tick,
+    tickLengthDp = tickLengthDp,
+    guideline = guideline,
+    itemPlacer = _itemPlacer,
+    sizeConstraint = sizeConstraint,
+    titleComponent = titleComponent,
+    title = title,
+  ) {
 
   /**
    * This function checks if the axis is not in restricted bounds.
@@ -56,74 +86,107 @@ public class CustomVerticalAxis<Position : AxisPosition.Vertical>(position: Posi
 
   override fun drawLabel(
     context: CartesianDrawContext,
-    label: TextComponent,
-    labelText: CharSequence,
+    labelComponent: TextComponent,
+    label: CharSequence,
     labelX: Float,
     tickCenterY: Float,
   ) {
     with(context) {
-      val textBounds =
-        label.getTextBounds(this, labelText, rotationDegrees = labelRotationDegrees)
+        val textBounds =
+          labelComponent
+            .getBounds(context = this, text = label, rotationDegrees = labelRotationDegrees)
+            .apply { translate(labelX, tickCenterY - centerY()) }
 
       if (position.isStart) {
         labelGuideline?.drawHorizontal(
           context = context,
-          left = chartBounds.left + textBounds.width(),
-          right = chartBounds.right,
+          left = layerBounds.left + textBounds.width(),
+          right = layerBounds.right,
           centerY = tickCenterY,
         )
       } else {
         labelGuideline?.drawHorizontal(
           context = context,
-          left = chartBounds.left,
-          right = chartBounds.right - textBounds.width(),
+          left = layerBounds.left,
+          right = layerBounds.right - textBounds.width(),
           centerY = tickCenterY,
         )
       }
     }
 
-    super.drawLabel(context, label, labelText, labelX, tickCenterY)
+    super.drawLabel(context, labelComponent, label, labelX, tickCenterY)
   }
 
-  public class Builder<Position : AxisPosition.Vertical>(
-    builder: BaseAxis.Builder<Position>? = null,
-  ) : BaseAxis.Builder<Position>(builder) {
-    /**
-     * Determines for what _y_ values this [VerticalAxis] is to display labels, ticks, and
-     * guidelines.
-     */
-    public var itemPlacer: AxisItemPlacer.Vertical = AxisItemPlacer.Vertical.step()
-
-    /** Defines the horizontal position of each axis label relative to the axis line. */
-    public var horizontalLabelPosition: HorizontalLabelPosition = HorizontalLabelPosition.Outside
-
-    /** Defines the vertical position of each axis label relative to its corresponding tick. */
-    public var verticalLabelPosition: VerticalLabelPosition = VerticalLabelPosition.Center
-
-    /** Creates a [VerticalAxis] instance with the properties from this [Builder]. */
-    @Suppress("UNCHECKED_CAST")
-    public inline fun <reified T : Position> build(): CustomVerticalAxis<T> {
-      val position =
-        when (T::class.java) {
-          AxisPosition.Vertical.Start::class.java -> AxisPosition.Vertical.Start
-          AxisPosition.Vertical.End::class.java -> AxisPosition.Vertical.End
-          else ->
-            throw IllegalStateException("Got unknown AxisPosition class ${T::class.java.name}")
-        }
-          as Position
-      return setTo(CustomVerticalAxis(position)).also { axis ->
-        axis.itemPlacer = itemPlacer
-        axis.horizontalLabelPosition = horizontalLabelPosition
-        axis.verticalLabelPosition = verticalLabelPosition
-      } as CustomVerticalAxis<T>
-    }
-  }
-
-  /** Houses a [VerticalAxis] factory function. */
+  /** Houses [VerticalAxis] factory functions. */
   public companion object {
-    /** Creates a [VerticalAxis] via [Builder]. */
-    public inline fun <reified P : AxisPosition.Vertical> build(
-      block: Builder<P>.() -> Unit = {},
-    ): CustomVerticalAxis<P> = Builder<P>().apply(block).build()
+    /** Creates a start [VerticalAxis]. */
+    public fun start(
+      line: LineComponent? = null,
+      label: TextComponent? = null,
+      labelRotationDegrees: Float = 0f,
+      horizontalLabelPosition: HorizontalLabelPosition = Outside,
+      verticalLabelPosition: VerticalLabelPosition = Center,
+      valueFormatter: CartesianValueFormatter = CartesianValueFormatter.decimal(),
+      tick: LineComponent? = null,
+      tickLengthDp: Float = 0f,
+      guideline: LineComponent? = null,
+      itemPlacer: ItemPlacer = ItemPlacer.step(),
+      sizeConstraint: SizeConstraint = SizeConstraint.Auto(),
+      titleComponent: TextComponent? = null,
+      title: CharSequence? = null,
+      labelGuideline: LineComponent? = null,
+    ): CustomVerticalAxis<AxisPosition.Vertical.Start> =
+      CustomVerticalAxis(
+        AxisPosition.Vertical.Start,
+        line,
+        label,
+        labelRotationDegrees,
+        horizontalLabelPosition,
+        verticalLabelPosition,
+        valueFormatter,
+        tick,
+        tickLengthDp,
+        guideline,
+        itemPlacer,
+        sizeConstraint,
+        titleComponent,
+        title,
+        labelGuideline,
+      )
+
+    /** Creates an end [VerticalAxis]. */
+    public fun end(
+      line: LineComponent? = null,
+      label: TextComponent? = null,
+      labelRotationDegrees: Float = 0f,
+      horizontalLabelPosition: HorizontalLabelPosition = Outside,
+      verticalLabelPosition: VerticalLabelPosition = Center,
+      valueFormatter: CartesianValueFormatter = CartesianValueFormatter.decimal(),
+      tick: LineComponent? = null,
+      tickLengthDp: Float = 0f,
+      guideline: LineComponent? = null,
+      itemPlacer: ItemPlacer = ItemPlacer.step(),
+      sizeConstraint: SizeConstraint = SizeConstraint.Auto(),
+      titleComponent: TextComponent? = null,
+      title: CharSequence? = null,
+      labelGuideline: LineComponent? = null,
+    ): CustomVerticalAxis<AxisPosition.Vertical.End> =
+      CustomVerticalAxis(
+        AxisPosition.Vertical.End,
+        line,
+        label,
+        labelRotationDegrees,
+        horizontalLabelPosition,
+        verticalLabelPosition,
+        valueFormatter,
+        tick,
+        tickLengthDp,
+        guideline,
+        itemPlacer,
+        sizeConstraint,
+        titleComponent,
+        title,
+        labelGuideline,
+      )
   }
 }

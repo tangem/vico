@@ -23,16 +23,16 @@ import com.patrykandpatrick.vico.core.common.orZero
 
 /**
  * Houses drawing information for a [LineCartesianLayer]. [opacity] is the lines’ opacity. [zeroY],
- * restricted to the interval [0, 1], specifies the position of the zero line (_y_ = 0) from the top
- * of the [LineCartesianLayer] as a fraction of the [LineCartesianLayer]’s height.
+ * restricted to the interval [[0, 1]], specifies the position of the zero line (_y_ = 0) from the
+ * top of the [LineCartesianLayer] as a fraction of the [LineCartesianLayer]’s height.
  */
 public class LineCartesianLayerDrawingModel(
-  private val pointInfo: List<Map<Float, PointInfo>>,
+  private val pointInfo: List<Map<Double, PointInfo>>,
   public val zeroY: Float,
   public val opacity: Float = 1f,
 ) : DrawingModel<LineCartesianLayerDrawingModel.PointInfo>(pointInfo) {
   override fun transform(
-    drawingInfo: List<Map<Float, PointInfo>>,
+    drawingInfo: List<Map<Double, PointInfo>>,
     from: DrawingModel<PointInfo>?,
     fraction: Float,
   ): DrawingModel<PointInfo> {

@@ -16,13 +16,11 @@
 
 package com.patrykandpatrick.vico.core.common
 
-import android.graphics.RectF
-
 /** Defines the functions required by the library to draw a chart legend. */
-public interface Legend<M : MeasureContext, D : DrawContext> : BoundsAware {
+public interface Legend<M : MeasureContext, D : DrawContext> : Bounded {
   /** Returns the height of the legend. */
-  public fun getHeight(context: M, availableWidth: Float): Float
+  public fun getHeight(context: M, maxWidth: Float): Float
 
   /** Draws the legend. */
-  public fun draw(context: D, chartBounds: RectF)
+  public fun draw(context: D)
 }

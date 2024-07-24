@@ -41,18 +41,18 @@ import com.patrykandpatrick.vico.core.common.Defaults.FADING_EDGE_WIDTH_DP
 @Composable
 public fun rememberFadingEdges(
   startEdgeWidth: Dp = FadingEdgesDefaults.edgeWidth,
-  endEdgeWidth: Dp = startEdgeWidth,
+  endEdgeWidth: Dp = FadingEdgesDefaults.edgeWidth,
   visibilityThreshold: Dp = FadingEdgesDefaults.visibilityThreshold,
   visibilityEasing: Easing = FadingEdgesDefaults.visibilityEasing,
 ): FadingEdges =
-  remember { FadingEdges() }
-    .apply {
-      startEdgeWidthDp = startEdgeWidth.value
-      endEdgeWidthDp = endEdgeWidth.value
-      visibilityThresholdDp = visibilityThreshold.value
-      this.visibilityInterpolator =
-        remember(visibilityEasing) { TimeInterpolator(visibilityEasing::transform) }
-    }
+  remember(startEdgeWidth, endEdgeWidth, visibilityThreshold, visibilityEasing) {
+    FadingEdges(
+      startEdgeWidth.value,
+      endEdgeWidth.value,
+      visibilityThreshold.value,
+      TimeInterpolator(visibilityEasing::transform),
+    )
+  }
 
 /**
  * Creates and remembers a [FadingEdges] instance.

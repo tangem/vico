@@ -23,7 +23,6 @@ import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.View
 import android.widget.OverScroller
-import androidx.core.view.ViewCompat
 import com.patrykandpatrick.vico.core.cartesian.CartesianChart
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawContext
 import com.patrykandpatrick.vico.core.cartesian.HorizontalLayout
@@ -36,9 +35,6 @@ import com.patrykandpatrick.vico.core.cartesian.data.ChartValues
 import com.patrykandpatrick.vico.core.cartesian.data.MutableChartValues
 import com.patrykandpatrick.vico.core.cartesian.data.RandomCartesianModelGenerator
 import com.patrykandpatrick.vico.core.cartesian.data.toImmutable
-import com.patrykandpatrick.vico.core.cartesian.drawMarker
-import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
-import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerVisibilityListener
 import com.patrykandpatrick.vico.core.common.Defaults
 import com.patrykandpatrick.vico.core.common.NEW_PRODUCER_ERROR_MESSAGE
 import com.patrykandpatrick.vico.core.common.Point
@@ -63,34 +59,34 @@ public open class CartesianChartView
 @JvmOverloads
 constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
   BaseChartView<CartesianChartModel>(context, attrs, defStyleAttr) {
+  private val themeHandler: ThemeHandler = ThemeHandler(context, attrs)
+
   private val scroller = OverScroller(context)
 
   private val mutableChartValues = MutableChartValues()
 
   override val measureContext: MutableCartesianMeasureContext =
     MutableCartesianMeasureContext(
-      canvasBounds = contentBounds,
+      canvasBounds = canvasBounds,
       density = context.density,
       isLtr = context.isLtr,
       scrollEnabled = false,
-      spToPx = context::spToPx,
+      zoomEnabled = false,
+      horizontalLayout = themeHandler.chart?.horizontalLayout ?: HorizontalLayout.Segmented,
       chartValues = ChartValues.Empty,
+      spToPx = context::spToPx,
     )
 
   private val scaleGestureListener: ScaleGestureDetector.OnScaleGestureListener =
-    ChartScaleGestureListener(getChartBounds = { chart?.bounds }, onZoom = ::handleZoom)
+    ChartScaleGestureListener(getLayerBounds = { chart?.layerBounds }, onZoom = ::handleZoom)
 
   private val scaleGestureDetector = ScaleGestureDetector(context, scaleGestureListener)
 
   private var markerTouchPoint: Point? = null
 
-  private var previousMarkerTargetHashCode: Int? = null
-
   private var scrollDirectionResolved = false
 
   private var horizontalDimensions = MutableHorizontalDimensions()
-
-  private val themeHandler: ThemeHandler = ThemeHandler(context, attrs)
 
   /**
    * Houses information on the [CartesianChart]’s scroll value. Allows for scroll customization and
@@ -102,13 +98,16 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
       newValue.postInvalidate = ::postInvalidate
       newValue.postInvalidateOnAnimation = ::postInvalidateOnAnimation
       measureContext.scrollEnabled = newValue.scrollEnabled
+      measureContext.zoomEnabled = measureContext.zoomEnabled && newValue.scrollEnabled
     }
 
   /** Houses information on the [CartesianChart]’s zoom factor. Allows for zoom customization. */
   public var zoomHandler: ZoomHandler by
     invalidatingObservable(
       ZoomHandler.default(themeHandler.isChartZoomEnabled, scrollHandler.scrollEnabled)
-    )
+    ) { _, newValue ->
+      measureContext.zoomEnabled = newValue.zoomEnabled && measureContext.scrollEnabled
+    }
 
   private val motionEventHandler =
     MotionEventHandler(
@@ -118,22 +117,11 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
       requestInvalidate = ::invalidate,
     )
 
-  /** Defines how the chart’s content is positioned horizontally. */
-  public var horizontalLayout: HorizontalLayout by
-    invalidatingObservable(themeHandler.horizontalLayout) { _, newValue ->
-      measureContext.horizontalLayout = newValue
-    }
-
-  /**
-   * Overrides the _x_ step (the difference between the _x_ values of neighboring major entries). If
-   * this is null, the output of [CartesianChartModel.getXDeltaGcd] is used.
-   */
-  public var getXStep: ((CartesianChartModel) -> Float)? by invalidatingObservable(null)
-
   /** The [CartesianChart] displayed by this [View]. */
   public var chart: CartesianChart? by
-    observable(themeHandler.chart) { _, _, _ ->
-      tryInvalidate(chart = chart, model = model, updateChartValues = true)
+    observable(themeHandler.chart) { _, _, newValue ->
+      if (newValue != null) measureContext.horizontalLayout = newValue.horizontalLayout
+      tryInvalidate(chart = newValue, model = model, updateChartValues = true)
     }
 
   /** Creates and updates the [CartesianChartModel]. */
@@ -146,7 +134,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     }
 
   private fun registerForUpdates() {
-    coroutineScope?.launch(dispatcher) {
+    coroutineScope?.launch {
       modelProducer?.registerForUpdates(
         key = this@CartesianChartView,
         cancelAnimation = {
@@ -165,7 +153,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
         updateChartValues = { model ->
           mutableChartValues.reset()
           if (model != null) {
-            chart?.updateChartValues(mutableChartValues, model, getXStep?.invoke(model))
+            chart?.updateChartValues(mutableChartValues, model)
             mutableChartValues.toImmutable()
           } else {
             ChartValues.Empty
@@ -192,12 +180,6 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     scrollHandler.clearUpdated()
   }
 
-  /** The [CartesianMarker] for this chart. */
-  public var marker: CartesianMarker? = null
-
-  /** Allows for listening to [marker] visibility changes. */
-  public var markerVisibilityListener: CartesianMarkerVisibilityListener? = null
-
   init {
     if (isInEditMode && attrs != null) {
       context.obtainStyledAttributes(attrs, R.styleable.CartesianChartView, defStyleAttr, 0).use {
@@ -213,15 +195,17 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
             RandomCartesianModelGenerator.defaultX.last,
           )
         val minY =
-          typedArray.getFloat(
-            R.styleable.CartesianChartView_previewMinY,
-            RandomCartesianModelGenerator.defaultY.start,
-          )
+          if (typedArray.hasValue(R.styleable.CartesianChartView_previewMinY)) {
+            typedArray.getFloat(R.styleable.CartesianChartView_previewMinY, 0f).toDouble()
+          } else {
+            RandomCartesianModelGenerator.defaultY.start
+          }
         val maxY =
-          typedArray.getFloat(
-            R.styleable.CartesianChartView_previewMaxY,
-            RandomCartesianModelGenerator.defaultY.endInclusive,
-          )
+          if (typedArray.hasValue(R.styleable.CartesianChartView_previewMaxY)) {
+            typedArray.getFloat(R.styleable.CartesianChartView_previewMaxY, 0f).toDouble()
+          } else {
+            RandomCartesianModelGenerator.defaultY.endInclusive
+          }
         setModel(
           RandomCartesianModelGenerator.getRandomModel(
             typedArray.getInt(R.styleable.CartesianChartView_previewColumnSeriesCount, 1),
@@ -259,7 +243,7 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     if (chart == null || model == null) return
     if (updateChartValues) {
       mutableChartValues.reset()
-      chart.updateChartValues(mutableChartValues, model, getXStep?.invoke(model))
+      chart.updateChartValues(mutableChartValues, model)
       measureContext.chartValues = mutableChartValues.toImmutable()
     }
     if (isAttachedToWindowCompat) invalidate()
@@ -303,7 +287,9 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 
   private fun handleZoom(focusX: Float, zoomChange: Float) {
     val chart = chart ?: return
-    scrollHandler.scroll(zoomHandler.zoom(zoomChange, focusX, scrollHandler.value, chart.bounds))
+    scrollHandler.scroll(
+      zoomHandler.zoom(zoomChange, focusX, scrollHandler.value, chart.layerBounds)
+    )
     handleTouchEvent(null)
     invalidate()
   }
@@ -318,43 +304,31 @@ constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
     withChartAndModel { chart, model ->
       measureContext.reset()
       horizontalDimensions.clear()
-      chart.prepare(measureContext, model, horizontalDimensions, contentBounds, marker)
+      chart.prepare(measureContext, model, horizontalDimensions, canvasBounds)
 
-      if (chart.bounds.isEmpty) return@withChartAndModel
+      if (chart.layerBounds.isEmpty) return@withChartAndModel
 
       motionEventHandler.scrollEnabled = scrollHandler.scrollEnabled
       if (scroller.computeScrollOffset()) {
         scrollHandler.scroll(Scroll.Absolute.pixels(scroller.currX.toFloat()))
-        ViewCompat.postInvalidateOnAnimation(this)
+        postInvalidateOnAnimation()
       }
 
-      zoomHandler.update(measureContext, horizontalDimensions, chart.bounds)
-      scrollHandler.update(measureContext, chart.bounds, horizontalDimensions)
+      zoomHandler.update(measureContext, horizontalDimensions, chart.layerBounds)
+      scrollHandler.update(measureContext, chart.layerBounds, horizontalDimensions)
 
       val cartesianDrawContext =
         CartesianDrawContext(
           canvas = canvas,
-          elevationOverlayColor = elevationOverlayColor,
           measureContext = measureContext,
           markerTouchPoint = markerTouchPoint,
           horizontalDimensions = horizontalDimensions,
-          chartBounds = chart.bounds,
-          horizontalScroll = scrollHandler.value,
+          layerBounds = chart.layerBounds,
+          scroll = scrollHandler.value,
           zoom = zoomHandler.value,
         )
 
-      chart.draw(cartesianDrawContext, model)
-
-      marker?.also { marker ->
-        previousMarkerTargetHashCode =
-          cartesianDrawContext.drawMarker(
-            marker,
-            markerTouchPoint,
-            chart,
-            markerVisibilityListener,
-            previousMarkerTargetHashCode,
-          )
-      }
+      chart.draw(cartesianDrawContext, model, markerTouchPoint)
       measureContext.reset()
     }
   }

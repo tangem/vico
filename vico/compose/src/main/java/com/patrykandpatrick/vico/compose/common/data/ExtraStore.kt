@@ -14,24 +14,19 @@
  * limitations under the License.
  */
 
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
+package com.patrykandpatrick.vico.compose.common.data
 
-plugins {
-    id "org.jetbrains.dokka"
-    id "maven-publish"
-    id "signing"
-}
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import com.patrykandpatrick.vico.core.common.data.ExtraStore
 
-subprojects {
-    version = library.version_name
-    apply plugin: "org.jetbrains.dokka"
-    tasks.withType(DokkaTaskPartial.class).configureEach {
-        dokkaSourceSets.configureEach { includes.from "Module.md" }
-        suppressInheritedMembers = true
-    }
-}
-
-dokkaHtmlMultiModule {
-    String dokkaBaseConfiguration = "{ \"customStyleSheets\": [\"$rootDir/logo-styles.css\"] }"
-    pluginsMapConfiguration.set(["org.jetbrains.dokka.base.DokkaBase": dokkaBaseConfiguration])
-}
+/**
+ * Remembers an [ExtraStore] lambda. When either initially composed or recomposed with new [keys]
+ * values, this function saves and returns [lambda]. When recomposed with unchanged [keys] values,
+ * it ignores [lambda] and returns the lambda that was last saved.
+ */
+@Composable
+public fun <R> rememberExtraLambda(
+  vararg keys: Any?,
+  lambda: R.(ExtraStore) -> Unit,
+): R.(ExtraStore) -> Unit = remember(*keys) { lambda }
