@@ -16,22 +16,18 @@
 
 package com.patrykandpatrick.vico.core.cartesian.layer
 
-import android.graphics.RectF
 import com.patrykandpatrick.vico.core.cartesian.CartesianDrawContext
 import com.patrykandpatrick.vico.core.cartesian.Insets
 import com.patrykandpatrick.vico.core.cartesian.MutableHorizontalDimensions
 import com.patrykandpatrick.vico.core.cartesian.data.AxisValueOverrider
 import com.patrykandpatrick.vico.core.cartesian.data.CartesianLayerModel
 import com.patrykandpatrick.vico.core.cartesian.data.ChartValues
-import com.patrykandpatrick.vico.core.common.BoundsAware
 import com.patrykandpatrick.vico.core.common.half
 import com.patrykandpatrick.vico.core.common.inClip
 
 /** A base [CartesianLayer] implementation. */
-public abstract class BaseCartesianLayer<T : CartesianLayerModel> : CartesianLayer<T>, BoundsAware {
+public abstract class BaseCartesianLayer<T : CartesianLayerModel> : CartesianLayer<T> {
   private val insets: Insets = Insets()
-
-  override val bounds: RectF = RectF()
 
   /** Overrides the _x_ and _y_ ranges. */
   public var axisValueOverrider: AxisValueOverrider = AxisValueOverrider.auto()
@@ -46,19 +42,19 @@ public abstract class BaseCartesianLayer<T : CartesianLayerModel> : CartesianLay
       xSpacing = xSpacing,
       scalableStartPadding = xSpacing.half,
       scalableEndPadding =
-        ((-chartValues.xLength / chartValues.xStep - 0.5f) % 1f + 1f) % 1f * xSpacing,
+        (((-chartValues.xLength / chartValues.xStep - 0.5) % 1 + 1) % 1).toFloat() * xSpacing,
     )
   }
 
   override fun draw(context: CartesianDrawContext, model: T) {
     with(context) {
       insets.clear()
-      getInsets(this, insets, horizontalDimensions)
+      updateInsets(this, horizontalDimensions, model, insets)
       canvas.inClip(
-        left = bounds.left - insets.getLeft(isLtr),
-        top = bounds.top - insets.top,
-        right = bounds.right + insets.getRight(isLtr),
-        bottom = bounds.bottom + insets.bottom,
+        left = layerBounds.left - insets.getLeft(isLtr),
+        top = layerBounds.top - insets.top,
+        right = layerBounds.right + insets.getRight(isLtr),
+        bottom = layerBounds.bottom + insets.bottom,
       ) {
         drawInternal(context, model)
       }

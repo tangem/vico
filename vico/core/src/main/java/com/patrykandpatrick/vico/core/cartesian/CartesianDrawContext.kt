@@ -19,17 +19,15 @@ package com.patrykandpatrick.vico.core.cartesian
 import android.graphics.Canvas
 import android.graphics.RectF
 import androidx.annotation.RestrictTo
-import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarker
-import com.patrykandpatrick.vico.core.cartesian.marker.CartesianMarkerVisibilityListener
+import com.patrykandpatrick.vico.core.cartesian.layer.CartesianLayer
 import com.patrykandpatrick.vico.core.common.DrawContext
 import com.patrykandpatrick.vico.core.common.Point
-import com.patrykandpatrick.vico.core.common.ceil
-import kotlin.math.abs
+import kotlin.math.ceil
 
 /** A [DrawContext] extension with [CartesianChart]-specific data. */
 public interface CartesianDrawContext : DrawContext, CartesianMeasureContext {
-  /** The bounds in which the [CartesianChart] will be drawn. */
-  public val chartBounds: RectF
+  /** The bounds of the [CartesianLayer] area. */
+  public val layerBounds: RectF
 
   /** Holds information on the [CartesianChart]’s horizontal dimensions. */
   public val horizontalDimensions: HorizontalDimensions
@@ -37,8 +35,13 @@ public interface CartesianDrawContext : DrawContext, CartesianMeasureContext {
   /** The point inside the chart’s coordinates where physical touch is occurring. */
   public val markerTouchPoint: Point?
 
-  /** The current amount of horizontal scroll. */
+  /** The scroll value (in pixels). */
+  public val scroll: Float
+
+  /** The scroll value (in pixels). */
+  @Deprecated("Use `scroll`.", ReplaceWith("scroll"))
   public val horizontalScroll: Float
+    get() = scroll
 
   /** The zoom factor. */
   public val zoom: Float
@@ -50,39 +53,38 @@ public fun CartesianMeasureContext.getMaxScrollDistance(
   chartWidth: Float,
   horizontalDimensions: HorizontalDimensions,
 ): Float =
-  (layoutDirectionMultiplier * (horizontalDimensions.getContentWidth(this) - chartWidth))
-    .run { if (isLtr) coerceAtLeast(minimumValue = 0f) else coerceAtMost(maximumValue = 0f) }
-    .ceil
+  ceil(
+    (layoutDirectionMultiplier * (horizontalDimensions.getContentWidth(this) - chartWidth)).run {
+      if (isLtr) coerceAtLeast(0f) else coerceAtMost(0f)
+    }
+  )
 
 internal fun CartesianDrawContext.getMaxScrollDistance() =
-  getMaxScrollDistance(chartBounds.width(), horizontalDimensions)
+  getMaxScrollDistance(layerBounds.width(), horizontalDimensions)
 
 /** @suppress */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public fun CartesianDrawContext(
   canvas: Canvas,
-  elevationOverlayColor: Int,
   measureContext: CartesianMeasureContext,
   markerTouchPoint: Point?,
   horizontalDimensions: HorizontalDimensions,
-  chartBounds: RectF,
-  horizontalScroll: Float,
+  layerBounds: RectF,
+  scroll: Float,
   zoom: Float,
 ): CartesianDrawContext =
   object : CartesianDrawContext, CartesianMeasureContext by measureContext {
-    override val chartBounds: RectF = chartBounds
+    override val layerBounds: RectF = layerBounds
 
     override var canvas: Canvas = canvas
 
-    override val elevationOverlayColor: Long = elevationOverlayColor.toLong()
-
     override val markerTouchPoint: Point? = markerTouchPoint
-
-    override val zoom: Float = zoom
 
     override val horizontalDimensions: HorizontalDimensions = horizontalDimensions
 
-    override val horizontalScroll: Float = horizontalScroll
+    override val scroll: Float = scroll
+
+    override val zoom: Float = zoom
 
     override fun withOtherCanvas(canvas: Canvas, block: (DrawContext) -> Unit) {
       val originalCanvas = this.canvas
@@ -91,35 +93,3 @@ public fun CartesianDrawContext(
       this.canvas = originalCanvas
     }
   }
-
-/** @suppress */
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public fun CartesianDrawContext.drawMarker(
-  marker: CartesianMarker,
-  markerTouchPoint: Point?,
-  chart: CartesianChart,
-  visibilityListener: CartesianMarkerVisibilityListener?,
-  previousTargetHashCode: Int?,
-): Int? {
-  if (markerTouchPoint == null || chart.markerTargets.isEmpty()) {
-    if (previousTargetHashCode != null) visibilityListener?.onHidden(marker)
-    return null
-  }
-  var targets = emptyList<CartesianMarker.Target>()
-  var previousDistance = Float.POSITIVE_INFINITY
-  for (xTargets in chart.markerTargets.values) {
-    val (distance, canvasXTargets) =
-      xTargets.groupBy { abs(markerTouchPoint.x - it.canvasX) }.minBy { it.key }
-    if (distance > previousDistance) break
-    targets = canvasXTargets
-    previousDistance = distance
-  }
-  marker.draw(this, targets)
-  val targetHashCode = targets.hashCode()
-  if (previousTargetHashCode == null) {
-    visibilityListener?.onShown(marker, targets)
-  } else if (targetHashCode != previousTargetHashCode) {
-    visibilityListener?.onUpdated(marker, targets)
-  }
-  return targetHashCode
-}

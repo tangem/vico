@@ -29,7 +29,7 @@ public interface LineCartesianLayerMarkerTarget : CartesianMarker.Target {
    *
    * @param entry the [LineCartesianLayerModel.Entry].
    * @param canvasY the point’s pixel _y_ coordinate.
-   * @param color the [LineCartesianLayer.LineSpec]’s color for the point.
+   * @param color the [LineCartesianLayer.Line]’s color for the point.
    */
   public data class Point(
     val entry: LineCartesianLayerModel.Entry,
@@ -39,7 +39,7 @@ public interface LineCartesianLayerMarkerTarget : CartesianMarker.Target {
 }
 
 internal data class MutableLineCartesianLayerMarkerTarget(
-  override val x: Float,
+  override val x: Double,
   override val canvasX: Float,
   override val points: MutableList<LineCartesianLayerMarkerTarget.Point> = mutableListOf(),
 ) : LineCartesianLayerMarkerTarget
