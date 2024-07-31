@@ -45,6 +45,10 @@ android {
     }
 }
 
+composeCompiler {
+    enableStrongSkippingMode = true
+}
+
 dependencies {
 
     api project(":vico:core")

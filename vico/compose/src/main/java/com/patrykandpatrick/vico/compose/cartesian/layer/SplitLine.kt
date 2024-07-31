@@ -60,7 +60,6 @@ public fun rememberSplitLine(
     dataLabelRotationDegrees,
     dataLabelRotationDegrees,
     pointConnector,
-    xSplitFraction
   ) {
     SplitLine(
       shader = shader,
@@ -76,4 +75,6 @@ public fun rememberSplitLine(
       pointConnector = pointConnector,
       xSplitFraction = xSplitFraction
     )
+  }.apply {
+    this.xSplitFraction = xSplitFraction
   }

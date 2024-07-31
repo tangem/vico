@@ -54,6 +54,10 @@ android {
     namespace "com.patrykandpatrick.vico"
 }
 
+composeCompiler {
+    enableStrongSkippingMode = true
+}
+
 dependencies {
 
     implementation project(":vico:compose-m3")

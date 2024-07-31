@@ -41,7 +41,7 @@ public class SplitLine(
   dataLabelValueFormatter: CartesianValueFormatter = CartesianValueFormatter.decimal(),
   dataLabelRotationDegrees: Float = 0f,
   pointConnector: LineCartesianLayer.PointConnector = LineCartesianLayer.PointConnector.cubic(),
-  @FloatRange(from = 0.0, to = 1.0) public val xSplitFraction: Float = 1f,
+  @FloatRange(from = 0.0, to = 1.0) public var xSplitFraction: Float = 1f,
 ) : LineCartesianLayer.Line(
   shader = shader,
   thicknessDp = thicknessDp,
@@ -63,6 +63,7 @@ public class SplitLine(
     opacity: Float,
   ) {
     backgroundShader = backgroundShaderFirst
+    val xSplitFraction = xSplitFraction
     when {
       xSplitFraction <= 0f -> {
         backgroundShader = backgroundShaderSecond
