@@ -35,7 +35,7 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
 /** Creates [CartesianChartModel]s and handles difference animations. */
-public class CartesianChartModelProducer private constructor(dispatcher: CoroutineDispatcher) {
+public class CartesianChartModelProducer (dispatcher: CoroutineDispatcher) {
   private var partials = emptyList<CartesianLayerModel.Partial>()
   private var extraStore = MutableExtraStore()
   private var cachedModel: CartesianChartModel? = null
