@@ -90,9 +90,14 @@ public class SplitLine(
       /* right = */ bounds.right,
       /* bottom = */ bounds.bottom,
     )
-    super.drawBackground(context, firstBounds, zeroLineYFraction, path, opacity)
+
+    if (firstBounds.isEmpty.not()) {
+      super.drawBackground(context, firstBounds, zeroLineYFraction, path, opacity)
+    }
     backgroundShader = backgroundShaderSecond
-    super.drawBackground(context, secondBounds, zeroLineYFraction, path, opacity)
+    if (secondBounds.isEmpty.not()) {
+      super.drawBackground(context, secondBounds, zeroLineYFraction, path, opacity)
+    }
     backgroundShader = backgroundShaderFirst
   }
 }
