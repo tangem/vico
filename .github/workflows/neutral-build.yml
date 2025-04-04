@@ -1,9 +1,6 @@
 name: Neutral Build
 
 on:
-  push:
-    branches:
-      - 'tangem-master'
   workflow_dispatch:
 
 env:
@@ -47,12 +44,12 @@ jobs:
 
       - name: Publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PACKAGES_SECRET }}
           GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
         run: |
           cd ${{ github.workspace }}/vico
           echo sdk.dir = $ANDROID_HOME > local.properties
-          ./gradlew -PgithubUser=${{ secrets.GITHUB_ACTOR }} -PgithubPass=${{ secrets.GITHUB_TOKEN }} -PpublishVersion=${{ env.VERSION_NAME }}-tangem${{ github.run_number }} publish
+          ./gradlew -PgithubUser=${{ secrets.GITHUB_ACTOR }} -PgithubPass=${{ secrets.GITHUB_TOKEN }} -PpublishVersion=${{ env.VERSION_NAME }}-tangemtest publish
 
       - name: Build notification
         if: always()
