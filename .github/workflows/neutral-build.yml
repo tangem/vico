@@ -47,12 +47,13 @@ jobs:
 
       - name: Publish
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_ACTOR: ${{ secrets.GITHUB_ACTOR }}
+          ORG_GRADLE_PROJECT_githubUser: ${{ secrets.GITHUB_ACTOR }}
+          ORG_GRADLE_PROJECT_githubPass: ${{ secrets.GITHUB_TOKEN }}
+          PUBLISH_VERSION: ${{ env.VERSION_NAME }}-tangem${{ github.run_number }}
         run: |
-          cd ${{ github.workspace }}/vico
+          cd "$GITHUB_WORKSPACE/vico"
           echo sdk.dir = $ANDROID_HOME > local.properties
-          ./gradlew -PgithubUser=${{ secrets.GITHUB_ACTOR }} -PgithubPass=${{ secrets.GITHUB_TOKEN }} -PpublishVersion=${{ env.VERSION_NAME }}-tangem${{ github.run_number }} publish
+          ./gradlew -PpublishVersion="$PUBLISH_VERSION" publish
 
       - name: Build notification
         if: always()
